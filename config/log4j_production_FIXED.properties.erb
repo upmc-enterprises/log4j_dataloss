@@ -1,0 +1,16 @@
+log4j.logger.Rails=ERROR, rails
+
+log4j.appender.rails=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.rails.File=RAILS_ROOT/log/RAILS_ENV.PID.log
+log4j.appender.rails.layout=org.apache.log4j.EnhancedPatternLayout
+log4j.appender.rails.layout.ConversionPattern=%d{ISO8601}{UTC} [%t] %-5p %c - %m%n
+log4j.appender.rails.ImmediateFlush=true
+log4j.appender.rails.DatePattern='.'yyyyMMddHHmm
+
+log4j.logger.second_log=INFO, second_log
+log4j.appender.second_log=org.apache.log4j.DailyRollingFileAppender
+log4j.appender.second_log.File=RAILS_ROOT/log/RAILS_ENV_other.PID.log
+log4j.appender.second_log.layout=org.apache.log4j.EnhancedPatternLayout
+log4j.appender.second_log.layout.ConversionPattern=%d{ISO8601}{UTC} [%t] %-5p %c - %m%n
+log4j.appender.second_log.ImmediateFlush=true
+log4j.appender.second_log.DatePattern='.'yyyyMMddHHmm

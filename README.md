@@ -58,6 +58,8 @@ Multiple runs will exhibit non-deterministic log results but the same issue.
 
 ### Solutions
 
+Solution 1 is implemented in this codebase and comprises of a one line addition to `lib/log4j.rb` and the inclusion of PID in each log file name (see `config/log4j_production_FIXED.properties.erb`).  The above methodology can be used to verify the validity of the fix.
+
 1. Put process ids (pid) in configuration file.
    * + Resolves issue
    * + Simple & quick
