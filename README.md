@@ -44,24 +44,33 @@ The problem arises when 2 processes are running and writing/managing the same se
     timeout 5m jruby logger.rb "CONTROL" &
     timeout 5m jruby logger.rb "NOTGOOD"
 
-Wait for the second process to terminte.  Running
+Wait for the second process to terminate.
 
-    ls -ali log/
-
-Should reveal consistently sized log files but does not
+The following will most likley display breaks in the continuous sequence number in the log entry confirming data loss.  Remember, every entry should start at 1 or 10 and end ~300 (minus jvm startup time)
 
     cat log/production.log* | grep CONTROL | sort
     cat log/production_other.log* | grep CONTROL |sort
     cat log/production.log* | grep NOTGOOD | sort
     cat log/production_other.log* | grep NOTGOOD |sort
 
-All examples will most likley display breaks in the continuous sequence number in the log entry confirming data loss.
+
+Multiple runs will exhibit non-deterministic log results but the same issue.
 
 ### Solutions
 
-1. Put process ids in configuration file. + Resolves issue + Simple - Fragments log files
-2. Create multiple log configuration files, loading only the relevant one upon startup.  + Reduces surface area - Does not 100% resolve issue (multipl processes may still need to write to common log)
-3. Log to centralized and singular log management service. + Resolves issue + Decouples log management from application - Additional infrastructure and monitoring necessary - Single point of failure
+1. Put process ids (pid) in configuration file.
+   * + Resolves issue
+   * + Simple & quick
+   * - Fragments log files
+   * - Application still responsible for log management
+   * - No aggregation
+2. Log to centralized and singular log management service.
+   * + Resolves issue
+   * + Decouples log management from application
+   * - Additional infrastructure and monitoring necessary - Single point of failure
+3. Create multiple log configuration files, loading only the relevant one upon startup.
+   * + Reduces surface area
+   * - Does not 100% resolve issue (multipl processes may still need to write to common log)
 
 ## References
 
