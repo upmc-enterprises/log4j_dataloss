@@ -3,9 +3,11 @@ Example illustrative of data loss problems with log4j DailyRollingFileAppender
 
 ## Problem statement
 
+Log4j is thread safe but not process safe.  If multiple processes managing the same log files, are running at the same time as when logs are rotated, data loss will be evident.
+
 From the log4j documentation
 
-    DailyRollingFileAppender extends FileAppender so that the underlying file is rolled over at a user chosen frequency. DailyRollingFileAppender has been observed to exhibit synchronization issues and data loss. The log4j extras companion includes alternatives which should be considered for new deployments and which are discussed in the documentation for org.apache.log4j.rolling.RollingFileAppender.
+> DailyRollingFileAppender extends FileAppender so that the underlying file is rolled over at a user chosen frequency. DailyRollingFileAppender has been observed to exhibit synchronization issues and data loss. The log4j extras companion includes alternatives which should be considered for new deployments and which are discussed in the documentation for org.apache.log4j.rolling.RollingFileAppender.
 
 ## Proof
 
@@ -13,20 +15,20 @@ From the log4j documentation
 
 Ensure you have rvm installed.  The .rvmrc should handle the correct installation of Jruby 1.7.13 and creation of a gemset.  To install the appropriate gems run the following.
 
-   bundle install
+    bundle install
 
 ### Control
 
-The 'control' illustrates a correct and working state to compare against.  One process managing multiple logs via a single configuration file.  All logs rollover every minute.  Typically logs are set to rollover daily but the mechanics are identical.
+The 'control' illustrates a correct and working state to compare against.  One process managing multiple log files via a single configuration file.  All log files rollover every minute.  Typically logs are set to rollover daily but the mechanics are identical.
 
     rm log/*
     timeout 5m jruby logger.rb "CONTROL"
 
-This will run for 5 minutes and then terminate.  The example logs to the main log every second and to the secondary log every 10 with the string 'CONTROL' and an incrementing counter to assist in verifying record continuity and loss.
+This will run for 5 minutes and terminate.  The example logs to the main log file every second and to the secondary log file every 10 seconds with the string 'CONTROL' and an incrementing counter on each entry to assist in verifying record continuity and potential loss.
 
     ls -ali log/
 
-You will note variable size at the first and last log and cosistency in the middle.
+You will note variable size at the first and last log file and cosistency in the middle.
 To visually inspect for log continuity use the following
 
     cat log/production.log* | sort
@@ -36,8 +38,30 @@ No record loss should be apparent in either case
 
 ### Problem scenario
 
+The problem arises when 2 processes are running and writing/managing the same set of logfiles.  To illustrate
+
+    rm log/*
+    timeout 5m jruby logger.rb "CONTROL" &
+    timeout 5m jruby logger.rb "NOTGOOD"
+
+Wait for the second process to terminte.  Running
+
+    ls -ali log/
+
+Should reveal consistently sized log files but does not
+
+    cat log/production.log* | grep CONTROL | sort
+    cat log/production_other.log* | grep CONTROL |sort
+    cat log/production.log* | grep NOTGOOD | sort
+    cat log/production_other.log* | grep NOTGOOD |sort
+
+All examples will most likley display breaks in the continuous sequence number in the log entry confirming data loss.
 
 ### Solutions
+
+1. Put process ids in configuration file. + Resolves issue + Simple - Fragments log files
+2. Create multiple log configuration files, loading only the relevant one upon startup.  + Reduces surface area - Does not 100% resolve issue (multipl processes may still need to write to common log)
+3. Log to centralized and singular log management service. + Resolves issue + Decouples log management from application - Additional infrastructure and monitoring necessary - Single point of failure
 
 ## References
 
